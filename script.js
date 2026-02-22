@@ -1,11 +1,25 @@
+// GLOBAL ELEMENTS
+const ruser = document.getElementById("ruser");
+const rpass = document.getElementById("rpass");
+const remail = document.getElementById("remail");
+const rphone = document.getElementById("rphone");
+const rmsg = document.getElementById("rmsg");
+
+const luser = document.getElementById("luser");
+const lpass = document.getElementById("lpass");
+const lmsg = document.getElementById("lmsg");
+const loginBox = document.getElementById("loginBox");
+
+const adminkey = document.getElementById("adminkey");
+const userTable = document.getElementById("userTable");
+
+
 // REGISTER
 async function register() {
-
-    const username = ruser.value;
-    const password = rpass.value;
-    const email = remail.value;
-    const phone = rphone.value;
-    const msg = rmsg;
+    const username = ruser.value.trim();
+    const password = rpass.value.trim();
+    const email = remail.value.trim();
+    const phone = rphone.value.trim();
 
     const res = await fetch("/api/register", {
         method: "POST",
@@ -14,20 +28,16 @@ async function register() {
     });
 
     const data = await res.json();
-    msg.style.color = res.ok ? "green" : "red";
-    msg.textContent = data.message;
+    rmsg.style.color = res.ok ? "green" : "red";
+    rmsg.textContent = data.message;
 
-    if (res.ok)
-        setTimeout(() => window.location.href = "/login.html", 1500);
+    if(res.ok) setTimeout(()=>window.location.href="/login.html",1500);
 }
-
 
 // LOGIN
 async function login() {
-
-    const username = luser.value;
-    const password = lpass.value;
-    const msg = lmsg;
+    const username = luser.value.trim();
+    const password = lpass.value.trim();
 
     const res = await fetch("/api/login", {
         method: "POST",
@@ -37,65 +47,57 @@ async function login() {
 
     const data = await res.json();
 
-    if (res.ok) {
-
+    if(res.ok) {
         localStorage.setItem("authUser", username);
         localStorage.setItem("authExpire", Date.now() + 86400000);
-
         showHome(username);
-
     } else {
-        msg.style.color = "red";
-        msg.textContent = data.message;
+        lmsg.style.color="red";
+        lmsg.textContent=data.message;
     }
 }
 
-
-// SHOW HOME WITH NAVBAR
-function showHome(user) {
-
-    loginBox.innerHTML = `
+// HOME & LOGOUT
+function showHome(user){
+    loginBox.innerHTML=`
     <div style="display:flex;justify-content:space-between;">
         <b>Home</b>
-        <button onclick="logout()" style="background:red;">Logout</button>
+        <button onclick="logout()" style="background:red;color:white;">Logout</button>
     </div>
-
     <h3>Welcome ${user}</h3>
-
     <button onclick="showDelete('${user}')" style="background:black;color:white;margin-top:15px;">
         Delete Account
     </button>
-
     <div id="deleteBox"></div>
     `;
 }
 
+function logout(){
+    localStorage.clear();
+    location.reload();
+}
 
-// SHOW SELF DELETE UI
-function showDelete(user) {
-
-    deleteBox.innerHTML = `
-    <p>Type your username to confirm:</p>
-    <input id="confirmUser" placeholder="Confirm Username">
-    <button onclick="deleteSelf('${user}')">Confirm Delete</button>
+// DELETE ACCOUNT
+function showDelete(user){
+    const deleteBox=document.getElementById("deleteBox");
+    deleteBox.innerHTML=`
+        <p>Type your username to confirm:</p>
+        <input id="confirmUser" placeholder="Confirm Username">
+        <button onclick="deleteSelf('${user}')">Confirm Delete</button>
     `;
 }
 
+async function deleteSelf(user){
+    const confirm=document.getElementById("confirmUser").value;
 
-// DELETE SELF
-async function deleteSelf(user) {
-
-    const confirm = document.getElementById("confirmUser").value;
-
-    const res = await fetch("/api/deleteSelf", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: user, confirm })
+    const res=await fetch("/api/deleteSelf",{
+        method:"DELETE",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({username:user, confirm})
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
+    const data=await res.json();
+    if(res.ok){
         alert("Account deleted");
         localStorage.clear();
         location.reload();
@@ -104,90 +106,61 @@ async function deleteSelf(user) {
     }
 }
 
-
-// ADMIN LOAD USERS
-async function loadUsers() {
-
-    const key = adminkey.value;
-
-    const res = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key })
+// ADMIN PANEL
+async function loadUsers(){
+    const key=adminkey.value.trim();
+    const res=await fetch("/api/admin",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({key})
     });
+    const data=await res.json();
 
-    const data = await res.json();
+    if(!res.ok){ alert(data.message); return; }
 
-    if (!res.ok) {
-        alert(data.message);
-        return;
-    }
-
-    let html = "<table border='1' style='width:100%;margin-top:10px'>";
-    html += "<tr><th>Username</th><th>Email</th><th>Phone</th><th>Delete</th></tr>";
-
-    data.users.forEach(u => {
-        html += `
-        <tr>
-        <td>${u.username}</td>
-        <td>${u.email}</td>
-        <td>${u.phone}</td>
-        <td>
-            <button onclick="adminDelete('${u.username}')">❌</button>
-        </td>
-        </tr>
-        `;
+    let html="<table border='1' style='width:100%;margin-top:10px'>";
+    html+="<tr><th>Username</th><th>Email</th><th>Phone</th><th>Delete</th></tr>";
+    data.users.forEach(u=>{
+        html+=`<tr>
+            <td>${u.username}</td>
+            <td>${u.email}</td>
+            <td>${u.phone}</td>
+            <td><button onclick="adminDelete('${u.username}')">❌</button></td>
+        </tr>`;
     });
-
-    html += "</table>";
-    userTable.innerHTML = html;
+    html+="</table>";
+    userTable.innerHTML=html;
 }
 
-
-// ADMIN DELETE
-function adminDelete(username) {
-
-    userTable.innerHTML += `
+function adminDelete(username){
+    userTable.innerHTML+=`
     <div style="margin-top:10px;">
         <p>Type username to confirm delete:</p>
         <input id="adminConfirm">
         <button onclick="confirmAdminDelete('${username}')">Confirm</button>
-    </div>
-    `;
+    </div>`;
 }
 
+async function confirmAdminDelete(username){
+    const confirm=document.getElementById("adminConfirm").value;
 
-async function confirmAdminDelete(username) {
-
-    const confirm = document.getElementById("adminConfirm").value;
-
-    const res = await fetch("/api/admin", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, confirm })
+    const res=await fetch("/api/admin",{
+        method:"DELETE",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({username, confirm})
     });
 
-    const data = await res.json();
-
+    const data=await res.json();
     alert(data.message);
     loadUsers();
 }
 
-
-// LOGOUT
-function logout() {
-    localStorage.clear();
-    location.reload();
-}
-
-
 // SESSION CHECK
-window.onload = function() {
+window.onload=function(){
+    const user=localStorage.getItem("authUser");
+    const expire=localStorage.getItem("authExpire");
 
-    const user = localStorage.getItem("authUser");
-    const expire = localStorage.getItem("authExpire");
-
-    if (user && Date.now() < expire && typeof loginBox !== "undefined") {
+    if(user && Date.now()<expire && typeof loginBox!=="undefined"){
         showHome(user);
     }
 };
