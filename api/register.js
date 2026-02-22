@@ -2,6 +2,7 @@ const { MongoClient } = require("mongodb");
 const { MONGO_URL, MAX_USERS } = require("../config");
 
 module.exports = async (req, res) => {
+
     if (req.method !== "POST") {
         return res.status(405).json({ message: "Method not allowed" });
     }
@@ -13,17 +14,26 @@ module.exports = async (req, res) => {
 
     const count = await users.countDocuments();
     if (count >= MAX_USERS) {
-        return res.status(400).json({ message: "Maximum users reached (50)" });
+        return res.status(400).json({ message: "Maximum users reached" });
     }
 
-    const { username, password } = req.body;
+    const { username, password, email, phone } = req.body;
 
-    const existing = await users.findOne({ username });
-    if (existing) {
-        return res.status(400).json({ message: "Username already exists" });
-    }
+    const userExists = await users.findOne({ username });
+    const emailExists = await users.findOne({ email });
+    const phoneExists = await users.findOne({ phone });
 
-    await users.insertOne({ username, password });
+    if (userExists) return res.status(400).json({ message: "Username exists" });
+    if (emailExists) return res.status(400).json({ message: "Email already used" });
+    if (phoneExists) return res.status(400).json({ message: "Phone already used" });
+
+    await users.insertOne({
+        username,
+        password,
+        email,
+        phone,
+        createdAt: new Date()
+    });
 
     res.status(200).json({ message: "Registered successfully" });
 };
