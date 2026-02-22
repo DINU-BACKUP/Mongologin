@@ -69,3 +69,62 @@ button {
     background: #00c853;
     color: white;
 }
+
+/* THEME COLORS */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --box-color: #f2f2f2;
+}
+
+body.dark {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --box-color: #1e1e1e;
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    transition: 0.3s;
+}
+
+.box {
+    background: var(--box-color);
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    margin: 100px auto;
+    text-align: center;
+    transition: 0.3s;
+}
+
+input {
+    width: 90%;
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background: transparent;
+    color: var(--text-color);
+}
+
+button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* TOGGLE BUTTON STYLE */
+.theme-toggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: black;
+    color: white;
+    font-size: 12px;
+}
