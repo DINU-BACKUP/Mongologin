@@ -5,27 +5,17 @@
 </head>
 <body>
 
+<button class="toggle-btn" onclick="toggleTheme()">Dark / Light</button>
+
 <div class="box">
 <h2>Register</h2>
 
 <input id="ruser" placeholder="Username">
 <input id="rpass" type="password" placeholder="Password">
-
-<div style="display:flex; gap:5px;">
-    <input id="remail" placeholder="Gmail" style="flex:1;">
-    <button onclick="enableEmailEdit()" id="editBtn">Edit</button>
-</div>
-
+<input id="remail" placeholder="Gmail">
 <input id="rphone" placeholder="Phone Number">
 
-<button onclick="sendOtp()" id="otpBtn">Send OTP</button>
-
-<div id="otpSection" style="display:none;">
-    <input id="rotp" placeholder="Enter OTP">
-    <button onclick="register()">Register</button>
-    <button onclick="resendOtp()" id="resendBtn" disabled>Resend OTP (60s)</button>
-</div>
-
+<button onclick="register()">Register</button>
 <p id="rmsg"></p>
 
 <a href="/login.html">Go to Login</a>
