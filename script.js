@@ -1,30 +1,11 @@
-// THEME TOGGLE
-function toggleTheme() {
-    const body = document.body;
-
-    if (body.classList.contains("dark")) {
-        body.classList.remove("dark");
-        body.classList.add("light");
-        localStorage.setItem("theme", "light");
-    } else {
-        body.classList.remove("light");
-        body.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-    }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    document.body.classList.add(savedTheme);
-});
 // REGISTER
 async function register() {
 
-    const username = document.getElementById("ruser").value;
-    const password = document.getElementById("rpass").value;
-    const email = document.getElementById("remail").value;
-    const phone = document.getElementById("rphone").value;
-    const msg = document.getElementById("rmsg");
+    const username = ruser.value;
+    const password = rpass.value;
+    const email = remail.value;
+    const phone = rphone.value;
+    const msg = rmsg;
 
     const res = await fetch("/api/register", {
         method: "POST",
@@ -36,18 +17,17 @@ async function register() {
     msg.style.color = res.ok ? "green" : "red";
     msg.textContent = data.message;
 
-    if (res.ok) {
+    if (res.ok)
         setTimeout(() => window.location.href = "/login.html", 1500);
-    }
 }
 
 
 // LOGIN
 async function login() {
 
-    const username = document.getElementById("luser").value;
-    const password = document.getElementById("lpass").value;
-    const msg = document.getElementById("lmsg");
+    const username = luser.value;
+    const password = lpass.value;
+    const msg = lmsg;
 
     const res = await fetch("/api/login", {
         method: "POST",
@@ -62,7 +42,7 @@ async function login() {
         localStorage.setItem("authUser", username);
         localStorage.setItem("authExpire", Date.now() + 86400000);
 
-        showLoggedIn(username);
+        showHome(username);
 
     } else {
         msg.style.color = "red";
@@ -71,41 +51,64 @@ async function login() {
 }
 
 
-// SESSION CHECK
-window.onload = function() {
+// SHOW HOME WITH NAVBAR
+function showHome(user) {
 
-    const user = localStorage.getItem("authUser");
-    const expire = localStorage.getItem("authExpire");
-
-    if (user && Date.now() < expire && document.getElementById("loginBox")) {
-        showLoggedIn(user);
-    }
-};
-
-
-// SHOW LOGGED IN UI
-function showLoggedIn(user) {
-
-    document.getElementById("loginBox").innerHTML = `
+    loginBox.innerHTML = `
     <div style="display:flex;justify-content:space-between;">
-        <h3>Welcome ${user}</h3>
+        <b>Home</b>
         <button onclick="logout()" style="background:red;">Logout</button>
     </div>
+
+    <h3>Welcome ${user}</h3>
+
+    <button onclick="showDelete('${user}')" style="background:black;color:white;margin-top:15px;">
+        Delete Account
+    </button>
+
+    <div id="deleteBox"></div>
     `;
 }
 
 
-// LOGOUT
-function logout() {
-    localStorage.clear();
-    location.reload();
+// SHOW SELF DELETE UI
+function showDelete(user) {
+
+    deleteBox.innerHTML = `
+    <p>Type your username to confirm:</p>
+    <input id="confirmUser" placeholder="Confirm Username">
+    <button onclick="deleteSelf('${user}')">Confirm Delete</button>
+    `;
+}
+
+
+// DELETE SELF
+async function deleteSelf(user) {
+
+    const confirm = document.getElementById("confirmUser").value;
+
+    const res = await fetch("/api/deleteSelf", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user, confirm })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert("Account deleted");
+        localStorage.clear();
+        location.reload();
+    } else {
+        alert(data.message);
+    }
 }
 
 
 // ADMIN LOAD USERS
 async function loadUsers() {
 
-    const key = document.getElementById("adminkey").value;
+    const key = adminkey.value;
 
     const res = await fetch("/api/admin", {
         method: "POST",
@@ -129,27 +132,62 @@ async function loadUsers() {
         <td>${u.username}</td>
         <td>${u.email}</td>
         <td>${u.phone}</td>
-        <td><button onclick="deleteUser('${u.username}')">❌</button></td>
+        <td>
+            <button onclick="adminDelete('${u.username}')">❌</button>
+        </td>
         </tr>
         `;
     });
 
     html += "</table>";
-
-    document.getElementById("userTable").innerHTML = html;
+    userTable.innerHTML = html;
 }
 
 
-// DELETE USER
-async function deleteUser(username) {
+// ADMIN DELETE
+function adminDelete(username) {
 
-    if (!confirm("Type username to confirm delete") ) return;
+    userTable.innerHTML += `
+    <div style="margin-top:10px;">
+        <p>Type username to confirm delete:</p>
+        <input id="adminConfirm">
+        <button onclick="confirmAdminDelete('${username}')">Confirm</button>
+    </div>
+    `;
+}
 
-    await fetch("/api/admin", {
+
+async function confirmAdminDelete(username) {
+
+    const confirm = document.getElementById("adminConfirm").value;
+
+    const res = await fetch("/api/admin", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username, confirm })
     });
 
+    const data = await res.json();
+
+    alert(data.message);
     loadUsers();
 }
+
+
+// LOGOUT
+function logout() {
+    localStorage.clear();
+    location.reload();
+}
+
+
+// SESSION CHECK
+window.onload = function() {
+
+    const user = localStorage.getItem("authUser");
+    const expire = localStorage.getItem("authExpire");
+
+    if (user && Date.now() < expire && typeof loginBox !== "undefined") {
+        showHome(user);
+    }
+};
